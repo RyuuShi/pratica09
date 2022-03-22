@@ -1,6 +1,10 @@
 var nave;
-class Example extends Phaser.Scene
-{
+var sparkle0;
+var sparkle1;
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+class Example extends Phaser.Scene {
 
     constructor ()
     {
@@ -13,9 +17,12 @@ class Example extends Phaser.Scene
         this.load.image('ship', 'assets/nave.png');
         this.load.image('mira', 'assets/mira.png');
         this.load.image('arma', 'assets/arma.png');
+        this.load.image('spark0', 'assets/blue.png');
+        this.load.image('spark1', 'assets/red.png');
         this.load.spritesheet('plasma', 'assets/plasmaball.png', { frameWidth: 128, frameHeight: 128 });
 
     }
+	
 
     create ()
     {
@@ -32,87 +39,135 @@ class Example extends Phaser.Scene
 
         this.cursors = this.input.keyboard.createCursorKeys();
 
-        this.nave = nave = this.physics.add.image(200, 100, 'ship');
+        nave = this.physics.add.image(200, 100, 'ship');
         this.player = this.physics.add.image(400, 300, 'mira');
         this.arma = this.physics.add.image(400, 700, 'arma');
 
         this.player.setCollideWorldBounds(true);
-        this.nave.setCollideWorldBounds(true);
+        nave.setCollideWorldBounds(true);
         this.arma.setCollideWorldBounds(true);
-
-             var source = {
-        contains: function (x, y)
-        {
-            var hit = nave.body.hitTest(x, y);
-            if(hit) {
-                alert('Target hit!');
+		
+		sparkle1 = this.add.particles('spark1').createEmitter({
+							x: nave.body.x,
+							y: nave.body.y,
+							speed: { min: -800, max: 800 },
+							angle: { min: 0, max: 360 },
+							scale: { start: 0.3, end: 0 },
+							blendMode: 'SCREEN',
+							active: false,
+							lifespan: 1000,
+							gravityY: 800,
+							
+							});
+		sparkle0 = this.add.particles('spark0').createEmitter({
+								x: nave.body.x,
+								y: nave.body.y,
+								speed: { min: -800, max: 800 },
+								angle: { min: 0, max: 360 },
+								scale: { start: 0.5, end: 0 },
+								blendMode: 'SCREEN',
+								active: false,
+								lifespan: 1000,
+								gravityY: 800,
+								
+							});
+        var source = {
+			contains:
+            function (x, y)
+            {       var hit;
+						
+							hit = nave.body.hitTest(x, y);
+					
+						if(hit) {
+							nave.visible = false;
+							
+							sparkle0.setPosition(nave.body.x, nave.body.y);
+							sparkle0.active = true;
+							sparkle1.setPosition(nave.body.x, nave.body.y);
+							sparkle1.active =  true;
+							
+							 setTimeout(() => {
+								sparkle0.stop();
+								sparkle1.stop();
+							 
+							 }, 500);
+			
+							
+						}
+						
+					return hit;
             }
-            return hit;
-        }
         };
+
+       
+
         this.particles = this.add.particles('plasma');
 
         this.particles.createEmitter({
             frame: 0,
             lifespan: 1000,
-            speedX: { min: -20, max: 20 },
-            speedY: { start: -400, end: -600, steps: 12 },
-            scale: { start: 0.3, end:  0.3 },
-            blendMode: 'ADD',
-            deathZone: { type: 'onEnter', source: source},
-            on: false
+			speedX: { min: -20, max: 20 },
+			speedY: { start: -400, end: -600, steps: 12 },
+			scale: { start: 0.3, end:  0.3 },
+			blendMode: 'ADD',
+			deathZone: { type: 'onEnter', source: source},
+			on: false
         });
 
         this.cameras.main.startFollow(this.player, true, 0.05, 0.05);
     }
-
+	
+	
     update ()
     {
         this.player.setVelocity(0);
 
         let velocidade = Math.floor(Math.random() * 1000) -500;
         let v = Math.random() * 100;
-        if (v <5 ) {
-             this.nave.setVelocityY(velocidade);
-        } else if (v > 95) {
-             this.nave.setVelocityX(velocidade);
+        if(nave != null) {
+		if (v <5 ) {
+            nave.setVelocityY(velocidade);
         }
+        else if (v > 95) {
+            nave.setVelocityX(velocidade);
+        }
+		}
 
-        if (this.cursors.space.isDown)
-        {
+        if (this.cursors.space.isDown) {
             this.particles.emitParticleAt(this.player.x, this.player.y+350);
         }
 
         this.arma.x= this.player.x;
         this.arma.y= this.player.y+400;
 
-        if (this.cursors.left.isDown)
-        {
+        if (this.cursors.left.isDown) {
             this.player.setVelocityX(-500);
         }
-        else if (this.cursors.right.isDown)
-        {
+        else if (this.cursors.right.isDown) {
             this.player.setVelocityX(500);
         }
 
-        if (this.cursors.up.isDown)
-        {
+        if (this.cursors.up.isDown) {
             this.player.setVelocityY(-500);
         }
-        else if (this.cursors.down.isDown)
-        {
+        else if (this.cursors.down.isDown) {
             this.player.setVelocityY(500);
         }
     }
 }
 
 const config = {
-    type: Phaser.AUTO,
-    parent: 'phaser-example',
-    physics: {
-        default: 'arcade',
+type:
+    Phaser.AUTO,
+parent: 'phaser-example'
+    ,
+physics:
+    {
+    default: 'arcade'
+        ,
     },
-    scene: [ Example ]
+scene:
+    [ Example ]
 };
 
 const game = new Phaser.Game(config);
